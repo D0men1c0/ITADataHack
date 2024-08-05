@@ -19,6 +19,8 @@ from nltk.tokenize import word_tokenize, regexp_tokenize
 from statsmodels.tsa.stattools import adfuller, kpss
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import spacy
+from nltk.corpus import words
+import inflect
 nlp = spacy.load('en_core_web_sm')
 
 #--------------------------------- Data Preprocessing ---------------------------------#
@@ -437,6 +439,59 @@ def preprocess_text_full(text: str, contractions_dict: dict) -> str:
     text = normalize_whitespace(text)
     text = text.lower()
     return text
+
+def filter_english_words(text : str) -> str:
+    """
+    Filter out non-English words from the input text.
+    Please note that leaves out plural terms.
+    
+    Parameters:
+    text (str): The input text to filter.
+
+    Returns:
+    str: Text with only English words preserved.
+
+    Example:
+    >>> text = "He loves to read books and learn new languages."
+    >>> filter_english_words(text)
+    'He loves to read and learn new'
+
+    Notes:
+    This function uses NLTK's words corpus to determine if words in the text are English.
+    """
+    
+    english_words = set(words.words())
+    words_in_text = text.split()
+    filtered_words = list(filter(lambda x: x.lower() in english_words, words_in_text))
+    return ' '.join(filtered_words)
+
+def plural_to_singular(text : str) -> str:
+    """
+    Convert plural nouns in the input text to their singular form.
+
+    Parameters:
+    text (str): The input text to convert.
+
+    Returns:
+    str: Text with plural nouns converted to singular form.
+
+    Example:
+    >>> text = "Apples are delicious. I like eating oranges and bananas."
+    >>> plural_to_singular(text)
+    'Apple is delicious. I like eating orange and banana.'
+    """
+    
+    p = inflect.engine()
+    words = text.split()
+    singular_words = []
+
+    for word in words:
+        if p.singular_noun(word):
+            singular_words.append(p.singular_noun(word))
+        else:
+            singular_words.append(word)
+    
+    return ' '.join(singular_words)
 
 #--------------------------------- Time Series Analysis ---------------------------------#
 
